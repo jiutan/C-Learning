@@ -260,7 +260,31 @@ b. 如果两个对象，内容不同：则**对第一对相异字符**进行比�
 ```
 ### 3.2.1 处理 string对象 中的字符 [#include<cctype>头文件]
 目的：需要 单独处理 string对象 中的字符
-#### 处理每个字符
+#### 处理每个字符[使用 基于范围的 for语句]
+```c
+	// expression 是一个String对象，用于处理该对象内的字符
+	// declaration 负责定义一个变量，用于访问序列中的基础元素【可以使用 引用&str 来更改自己】
+	for( declaration : expression)		// 每次迭代，declaration部分的变量会被初始化为expression部分的下一个元素值
+		statement;						// 待实现的功能
+```
+举例：改变自身字符串字符
+```c
+	string str("hello");
+	// 使用for语句 与 引用：每次迭代，c 引用 str的下一个字符
+	for(auto &c : str)					// 使用 auto自动定义变量类型；引用&c，使c与str绑定，更改c就是更改str。最后输出str
+		c = toupper(c);					// toupper函数是将 小写字母变为大写字母
+	cout << str << endl;
+```
+#### 访问/处理 单个字符 的方式：（1）使用 下标 （2）使用 迭代器
+##### 方法一：下标/索引 （下标符号：[ ]）
+注意：s[index] 下标的类型为 **string::size_type类型**，可以使用 **decltype(str.size())来定义 index**
+前提：要保证 下标必须在合理范围内： 0 <= index <= str.size()
+```c
+	string str("Hello");
+
+	cout << str[0] << endl;
+```
+##### 方法二：迭代器（3.4节与第9章）
 
 # C++常用函数
 ### 生成随机数：
