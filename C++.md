@@ -307,3 +307,26 @@ int main{
 ```c
 	auto len = s.size();		// 系统自己定义 len的类型 （是 string::size_type类型） 
 ```
+
+# C++头文件的使用
+## 对 String对象 的操作
+### cctype头文件
+```c
+#include<cctype>
+
+	// 头文件中的函数
+	isalnum(s);					// 若 s为 字母或数字 时，为真，否则为假
+	isalpha(s);					// 若 s为 字母 时，为真，否则为假
+	iscntrl(s);					// 若 s为 控制字符 时，为真，否则为假
+	isdigit(s);					// 若 s为 数字 时，为真，否则为假
+	isgraph(s);					// 若 s为 不是空格但可打印 时，为真，否则为假
+	islower(s);					// 若 s为 小写字母 时，为真，否则为假
+	isprint(s);					// 若 s为 可打印字符（如：空格） 时，为真，否则为假
+	ispunct(s);					// 若 s为 标点符号 时，为真，否则为假
+	isspace(s);					// 若 s为 空白（空格、制表符、回车、换行等） 时，为真，否则为假
+	isupper(s);					// 若 s为 大写字母 时，为真，否则为假
+	isxdigit(S);				// 若 s为 十六进制数字 时，为真，否则为假
+
+	tolower(s); 				// 若 s为大写字母，则输出 对应的小写字母
+	toupper(s); 				// 若 s为小写字母，则输出 对应的大写字母
+```
