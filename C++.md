@@ -1010,7 +1010,7 @@ public:
   - ==显示法==：
     - 调用 **有参构造**：`类名 类对象 = 类名(实参)`
     - 调用 **拷贝构造**：`类名 类对象 = 类名(类对象2)`
-    - 注意事项1：`类名(实参)`为 匿名对象，其特点：当前行执行结束后，系统会立即回收掉 匿名对象
+    - 注意事项1：==创建**匿名对象：`类名(实参)`**==，其特点：当前行执行结束后，系统会立即回收掉 匿名对象
     - 注意事项2：*不要利用 拷贝构造函数，来 初始化 匿名对象*。
     不能使用`类名(类对象1);`。因为 编译器会默认`类名(类对象)= 类名 类对象`，重复定义。
   - ==隐式转换法==：
@@ -1527,9 +1527,338 @@ int main(){
     return 0;
 }
 ```
-### 7.5 
+### 7.5 运算符重载
+1. 概念：对 ==已有的运算符 **重新进行定义**==，赋予其 另一种功能，用来适应**不同的数据类型**。
+2. 为什么使用 运算符重载：对于 **自定义的数据类型**，编译器不知道如何运算
+3. 注意事项：
+  - 注意1：对于 **内置的数据类型** 的表达式 的 运算符 是**不可以更改的**
+  - 注意2：**不要滥用 运算符重载**
+#### 7.5.1 加号运算符（operator+） 重载
+1. 作用：实现==两个**自定义 数据类型 相加**的运算==
+2. 方法：
+- 通过**成员函数**重载+号：
+  - 重载：在 类 中，创建成员函数：`类名 operator+(类名 &p){	运算	}`
+  - 使用：在 程序中，使用`+`号：`类1 + 类2`
+  - 本质： `Person p3 = p1.operator+(p2)`
+```c
+class Person
+{
+public:
+    Person(){
+        num = 0;
+    }
+    int num;
+    // 通过成员函数 重载+号
+    Person operator+(const Person &p){
+         Person temp;	// 用于 返回类属性
+         // this 指向 使用该成员函数的 对象
+         temp.num = this->num + p.num;       
+         return temp;                         // 别忘了 返回值 
+    }
+};
+int main(){
+	Person p1;
+	p1.num = 10;
+	Person p2;
+	p2.num = 10;
+	// 调用 成员函数 重载	使用 + 号
+	Person p3 = p1 + p2;		// p3.num = 20
+	return 0;
+}
+```
+- 通过**全局函数**重载+号：
+  -  重載：在类外，创建全局函数：`类名 operator+(类名 &p1.类名 &p2)`
+  -  使用：在 程序中，使用`+`号：`类1 + 类2`
+  -  本质：`Person p3 = operator+(p1,p2)`
+```c
+/*      函数 重载 的 版本   */
+/*  2. 全局函数 重载 + 号*/
+Person operator+(Person &p1,Person &p2){
+    Person temp;	// 用于 返回类属性
+    temp.num = p1.num + p2.num;
+    return temp;
+}
+int main(){
+	Person p1;
+	p1.num = 10;
+	Person p2;
+	p2.num = 10;
+	// 调用 成员函数 重载	使用 + 号
+	Person p3 = p1 + p2;		// p3.num = 20
+	return 0;
+}
+```
+3. 注意：运算符 重载 也可以发生 **函数重载**：
+例如：
+```c
+/*      函数 重载 的 版本   */
+Person operator+(Person &p,int a){
+    Person temp;
+    temp.num = p.num + a;
+}
+int main(){
+	Person p1;
+	Person p4 = p1 + 30;
+}
+```
+#### 7.5.2 左移运算符（operator<<） 重载 【难点，不会】
+1. 作用：可以==**输出自定义**的数据类型==
+  - 比如：直接输出 类对象：`cout << 类对象 << endl`，不重载会报错
+2. 注意：**不能使用 成员函数** 重载 左移运算符
+3. 方法：使用**全局函数**重载 左移运算符
+程序：
+```c
+/*      内容：全局函数 重载 左移 运算符  
+        本质：operator<<(cout,p)
+        简化：cout << p
+*/
+// cout 为 ostream输出流类 对象，且 只能有一个 使用引用&【输出流 不能 拷贝】
+// 返回值 为 cout ，也为 输出流类型 ostream &(使用 引用，唯一)
+// 注意：ostream 输出流类 在 std命名空间下
+std::ostream &operator<<(std::ostream &out,Person &p){           
+    out << "num = " << p.num << " private_num = " << p.private_num;
+    return out;
+}
+```
+4. 总结：重载左翼运算符**配合 友元** 可以实现 **输出自定义类型**
+```c
+class Person
+{
+    // 友元 全局函数
+    friend std::ostream &operator<<(std::ostream &out,Person &p);
 
+private:
+    /* data */
+    int private_num;
+public:
+    Person(int a){
+    	private_num = a;
+    };
+    int num;
+    /*      注意：不能 利用 成员函数 重载 << 运算符  
+            因为：无法 实现 cout在左侧
+            所以：只能 利用 全局函数 重载 << 运算符
+    */ 
+};
+int main(){
+	Person p(100);
+    p.num = 10;
+    /*		直接 输出 类对象p 便可以 输出内容 */
+    std::cout << p << std::endl;
+    return 0;
+}
 
+```
+#### 7.5.3 递增运算符（operator++） 重载
+1. 作用：通过 重载递增运算符，==实现自己的**整型数据**==
+##### 递增运算符：【重点】
+1. 前置递增`++a`：==**先进行 变量 递增**，再 输出 表达式==
+```c
+	int a = 10;
+	cout << ++a << endl;	// a = 11，先递增 a，再输出 a
+	cout << a << ednl;		// a = 11。a 已经 递增过一次
+```
+2. 后置递增`b++`：==**先进行 表达式运算**，再 变量 递增==
+```c
+	int b = 10;
+	cout << b++ << endl;	// b = 10，先输出 b，再进行b+1递增
+	cout << b << end;		// b = 11
+```
+##### 重载 前置递增【前置 返回 引用】
+1. 位置：在 类 内，为 成员函数
+2. 重点：返回类型 为 **`类名 &`**
+程序：
+```c
+/** 重载 前置递增
+      * 目的：使 m_Num++ 
+      * 返回类型：MyInteger&
+    */
+    // 【前置 返回 引用】。原因：为了 一直对一个数据 进行递增操作
+    MyInteger& operator++(){
+        // 先进行++运算
+        m_Num++;
+        // 再 进行返回
+        return *this;       // 返回 自身类 类型：自身为this，解引用*this为 自身的值。返回值 为：MyInteger& ，把自身作为一个返回
+    }
+```
+2. 注意：
+```c
+	 // 若返回的不是引用&,则
+    std::cout << ++(++myint) << std::endl;  // 输出 为 2
+    std::cout << myint << std::endl;        // 输出 则为 1（没有传递给 myint对象）
+```
+##### 重载 后置递增【后置 返回 值】
+1. 位置：在 类 内，为 成员函数
+2. 重点：返回类型 为 **`类名`**
+3. 程序：
+```c
+// 重载 后置递增 【后置 返回 值】原因：temp为临时变量，执行完就 释放掉了，若再返回引用，则非法操作
+    MyInteger operator++(int){   // int 代表 占位参数，用于 区分 前置与后置递增。【重点：int！！！】
+        // 先 返回 结果（先 记录下 当时的结果）
+        MyInteger temp = *this;             // *this 为 自身现在的结果
+        // 再 递增
+        m_Num++;
+        // 最后 将 记录的结果，做为返回
+        return temp;
+    }
+```
+#### 7.5.4 赋值运算符 重载
+1. C++编译器 至少给 一个类 添加4个函数：
+  1. 默认构造函数（无参，函数体为 空）
+  2. 默认析构函数（无参，函数体为 空）
+  3. 默认拷贝构造函数，对 **属性 进行 值拷贝**
+  4. ==赋值运算符`operator=`，对 **属性 进行 值拷贝**==
+2. 注意：如果类中 有属性指向 堆区，做 赋值操作时 也会出现 深浅拷贝的问题。
+##### 问题
+1. 问题：若有析构函数，使用默认的赋值运算符时，系统会因为**内存重复释放**导致程序崩溃。
+```c
+class Person
+{
+public:
+    Person(int age);
+    ~Person();
+    int *m_Age;     // 待 开辟到 堆区
+    }
+};
+// 构造函数 时：将 数据 开辟到 堆区
+Person::Person(int age)
+{
+    m_Age = new int(age);                   // 用 m_age 来 维护/管理 堆区age数据
+}
+// 析构函数：释放 堆区 的数据
+Person::~Person(){
+    if(m_Age != NULL){
+        delete m_Age;                       // 释放 内存
+        m_Age = NULL;
+    }
+}
+void test01(){
+    Person p1(18);
+    Person p2(20);
+ 	// 错误：堆区内存重复释放，程序崩溃。（因为：p2与p1 都指向 一块 堆区 内存）
+    p2 = p1;                           
+    std::cout << *p1.m_Age << "  " << *p2.m_Age << std::endl;
+}
+```
+4. 解决方法：利用**重载赋值运算（深拷贝）**，解决 浅拷贝 带来的 问题。
+  - 需要在 堆区 重新开辟出 新的 地方，用于 赋值
+##### 解决：重载 赋值运算符（operator=）
+1. 属性：==**成员函数**==
+2. 步骤：
+	1. 先 **判断 该对象 是否有 属性 在堆区**：
+	2. 如果有：则 **将 自身属性 释放 干净**。
+	3. 释放后：再 进行 **深拷贝**（new一块新的空间，进行拷贝）
+3. 代码：
+```c
+class Person
+{
+public:
+    Person(int age);
+    ~Person();
+    int *m_Age;     // 待 开辟到 堆区
+    // 重载 赋值运算符
+    Person& operator=(Person &p){       // 返回引用，才是 真的 自身
+        // 编译器 提供的 前拷贝：m_age = p.m_age
+// 应该 先判断 该对象 是否 有属性 在堆区：如果有 则 先释放干净，然后 再进行 深拷贝
+        // 步骤1：判断 是否有属性
+        if(m_Age != NULL){
+        // 步骤2：先将 自身 属性 释放干净
+            delete m_Age;               
+            m_Age = NULL;
+        }
+        // 步骤3：深拷贝操作
+        m_Age =  new int(*p.m_Age);     // 在堆区 开辟出 新的 空间，并用 自身 去 管理它
+        // 步骤4：增加 返回值，为了 链式 连接
+        return *this;                   // 返回 对象的本身： 指向自身的指针 为 this，找回自身本体 为 *this
+    }
+};
+void test01(){
+    Person p1(18);
+    Person p2(20);
+    Person p3(30);
+    p3 =p2 = p1;                            // 会使：堆区内存重复释放，程序崩溃。（因为：p2与p1 都指向 一块 堆区 内存）
+    std::cout << *p1.m_Age << "  " << *p2.m_Age << "  " << *p3.m_Age << std::endl;
+}
+```
+#### 7.5.5 关系运算符 重载
+1. 关系运算符：>，<，!=，==
+2. 重载的作用：重载 关系运算符，可以让 两个 **自定义类型的 对象** 进行 **对比**操作
+##### 重载 ==运算符（operator==）
+1. 重点：**在 类 内**定义
+2. 程序：
+```c
+class Person
+{
+public:
+/*      重载 == 关系运算符     */
+    bool operator==(const Person &p){
+        if(this->m_age == p.m_age)
+            return true;
+        else
+            return false;
+    }
+}
+```
+##### 重载 !=运算符（operator!=）
+1. 重点：**在 类 内**定义
+2. 程序：
+```c
+class Person
+{
+public:
+/*      重载 ！= 关系运算符     */
+    bool operator!=(const Person &p){
+        if(this->m_age == p.m_age)
+            return false;
+        else
+            return true;
+    }
+}
+```
+#### 7.5.6 函数调用运算符（operator()） 重载【也称 仿函数】
+1. 位置：**在 类 内**定义
+2. 定义：函数调用运算符 **( )** 也可以 重载
+3. 概念：由于 重载后 使用的方式 非常像 函数的调用，因此称为 **仿函数**
+4. 注意：仿函数**没有固定写法**，非常灵活【==依照 **不同需求** ，写 **不同 的 仿函数**==】
+5. 比如：
+```c
+class MyPrint
+{
+public:
+/*      重载 函数调用运算符     */
+    void operator()(std::string test){
+        std::cout << test << std::endl;
+    }
+}
+
+int main(){
+    MyPrint myprint;
+    myprint("helloworld");      // 由于 使用起来 非常像 函数调用，因此称为 仿函数
+    
+    return 0;
+}
+```
+##### 技巧：使用 匿名对象
+1. 创建 匿名对象：`类名()`
+2. 特点：使用完后，就 销毁
+3. 作用：可以**不用 创建 类对象**，即可 使用 仿函数
+例如：
+```c
+// 加法类
+class MyAdd
+{
+public:
+	// 仿函数
+    int operator()(int num1,int num2){
+        return num1+num2;
+    }
+};
+int main(){
+	// 使用 匿名函数对象
+	cout << MyAdd()(10,20) << endl;			// 30
+	return 0;
+}
+```
 
 # C++核心编程
 ## 一、面向对象（OPP）
