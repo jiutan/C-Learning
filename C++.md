@@ -1409,6 +1409,127 @@ void test(){
 	// 常对象 不可调用 普通函数，因为 普通函数 可以修改 成员变量
 }
 ```
+### 7.4 友元
+1. 目的：让 一个函数 或 类，访问 另一个类中的**私有private成员**。
+2. 关键字：==`friend`==
+3. 友元 的 三种实现：
+  - **全局函数** 做 友元
+  - **类** 做 友元
+  - **成员函数** 做 友元
+#### 7.4.1 成员函数 做 友元
+1. 方法：在 类中  *最开始* 声明 全局函数：**`friend 全局函数名(形参);`**
+2. 比如：
+```c
+class Building
+{
+    /*      声明 全局函数 并且 为 友元 */
+    // GoodFriend函数 为 Building中的 尤元，可以访问 类中 私有属性
+    friend void GoodFriend(Building *build);        
+private:
+    std::string m_SittingRoom;      // 客厅
+public:
+    // 构造函数
+    Building(){
+        m_BedRoom = "bed room";
+    }
+};
+/*      定义 全局函数    */
+// 传入的 形参 为 Building类（引用形式 或者 指针形式） 为 build 本身
+void GoodFriend(Building *build){            
+    // 因为 build为指针，所以使用->取成员
+    // 因为 友元 所以 可以访问 private 成员
+    std::cout << build -> m_SittingRoom << std::endl;
+}
+```
+#### 7.4.2 类 做 友元
+1. 方法：在 A类中 *最开始* 声明 B类：**`friend class 友元类;`**
+2. 目的：让 B类 可以访问 A类 的 private内的成员属性
+3. 比如：
+```c
+class Building
+{
+    /*   GoodGay 类 是 友元，可以 访问 Building中的 Private类 成员   */
+    friend class GoodGay;
+private:
+    /* data */
+    std::string m_bedroom;
+public:
+    Building(/* args */);
+    std::string m_livingroom;
+};
+class GoodGay
+{
+private:
+    /* data */
+public:
+    GoodGay();
+    void visit();                   //  参观函数 访问 Building中的 属性
+    Building *building;             // 创建 指针，用于 指向 堆区中的 对象
+};
+/*   类外 写 构造函数 与 析构函数   */
+Building::Building(/* args */)
+{
+    m_livingroom = "living room";
+    m_bedroom = "bed room";
+}
+GoodGay::GoodGay(){
+    // 创建一个 building对象
+    // 在 堆区 创建一个Building对象（返回的是 指针），并且 让 Building* building指针 指向 堆区新创建的 对象
+    building = new Building;           
+}
+/* 类外 声明 成员函数	*/
+void GoodGay::visit(){ 
+    std::cout << "GoodGay类 正在访问：" << building -> m_livingroom << std::endl;
+    // 访问 私有 成员属性
+    std::cout << "GoodGay类 正在访问：" << building -> m_bedroom << std::endl;	
+}
+```
+#### 7.4.3 成员函数 做 友元
+1. 方法：在 A类中  *最开始* 声明 B类的成员函数：**`friend B类名::函数名(形参);`**
+2. 目的：让 B类的成员函数 可以访问 A类 的 private内的成员属性
+3. 例如：
+```c
+class Building
+{
+    // 声明 友元 成员函数
+    // 告诉 编译器 Gooday类 下的 成员函数visit 为 友元函数，可以访问 如下的 私有属性
+    friend void GoodGay::visit();   /*	重点	*/
+private:
+    std::string m_bedroom;
+public:
+    Building(/* args */);
+    std::string m_livingroom;
+};
+class GoodGay
+{
+public:
+    GoodGay(/* args */);
+    Building *building;
+    void visit();                   // 想让 visit 成员函数 可以访问 Building 中的 私有成员
+};
+Building::Building(/* args */)
+{
+    m_livingroom = "客厅";
+    m_bedroom = "卧室";
+}
+GoodGay::GoodGay(/* args */)
+{
+    building = new Building;            // 用 指针 维护 在堆区中创建的 对象
+}
+// 友元 函数
+void GoodGay::visit(){
+    std::cout << "visit 函数 正在访问：" << building -> m_livingroom << std::endl;
+}
+int main(){
+    // 实例化 对象
+    GoodGay gg;
+    gg.visit();
+    return 0;
+}
+```
+### 7.5 
+
+
 
 # C++核心编程
 ## 一、面向对象（OPP）
