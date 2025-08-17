@@ -2148,6 +2148,162 @@ void test(){
 }
 ```
 4. 注意 总结：使用 模板时 必须确定出 通用数据类型 T，并且能够 **推导出一致的 类型**
+#### 8.2.3 普通函数 和 函数模板 的 区别
+1. 普通函数调用时，可以发生 **自动类型转换（隐式类型转换）**
+2. 函数模板 调用时，如果利用 自动类型 推导，不会发生 隐式类型转换
+3. 如果利用 显示指定类型的方式，可以发生 隐式类型转换。
+```c
+// 函数模板
+template<typename T>
+T Add(T a,T b){
+    return a + b;
+}
+void main(){	
+	int a = 10;
+	int b = 20;
+	int c = 'A';
+	
+	// 第一种 调用方式： 自动类型推导
+    std::cout << Add(a,b) << std::endl;
+    
+    // 第二种 调用方式： 显式 指定类型
+    std::cout << Add<int>(a,c) << std::endl;
+    
+    // 错误 调用 : 函数模板，无法 隐式类型转换
+	std::cout << Add(a,c) << std::endl;
+
+	return 0;
+}
+```
+#### 8.2.4 普通函数 与 函数模板 同名时 的 调用规则
+1. 如果 函数模板和普通函数 重名，**优先 调用 普通函数**。
+2. 可以通过 ==空模板参数列表**`函数名<>(实参)`**来 **强制** 调用 函数模板==
+```c
+	myPrint<>(a,b);		// 强制 调用 函数模板
+```
+3. ==函数模板 也可以发生 **重载**==
+4. 如果 函数模板 可以产生 ==更好的匹配，**优先调用 函数模板**==
+  - 类型 与 普通函数 不同，则 函数模板 为 更好的匹配。
+==总结：实际开发中 普通函数和函数模板 **不要重名**，否则 容易出现 二义性==
+
+#### 8.2.5 模板 的 局限性
+1. 模板 的 通用性 **不是 万能的**
+比如：
+  - 特定的 数据类型，需要 重载 
+2. ==自定义的 数据类型，需要用 具体方式 做 **特殊的实现**==
+方法：
+  **利用 具体化 自定义类型的模板 实现代码**，==具体化 优先调用==
+3. 具体化 自定义类型：**`template<> 返回类型 函数名(自定义类型 形参){}`**
+```c
+template<typename T>
+bool myCompare(T &p1,T &p2){
+	if(p1 == p2){
+		return true;
+	}else{
+		return false;
+	}
+}
+
+// 具体化 Person类 模板 的 实现
+template<> bool myCompare(Person &p1,Person &p2){
+	if(p1.name == p2.name){
+		return true;
+	}else{
+		return false;
+	}
+}
+
+```
+4. 总结
+- 利用 具体化模板，可以解决 **自定义类型 的 通用化**
+- 学习模板 并不是为了 写模板，而是在 **STL中 能够运用 系统提供的 模板**
+
+### 8.3 类模板
+1. 类模板 作用：
+  建立一个通用类，类中的**成员 数据类型 可以不具体指定**，用一个**虚拟的类型**来代表。
+2. 语法：
+```c
+	// 模板参数列表：有多少成员类型不指定，有多少个虚拟类型
+	template<class T1,class T2,...>		
+	定义 类
+```
+- template：声明 创建模板
+- typename/class： 声明 数据类型
+- T：通用 的 数据类型（名称可以替换，通常为 大写字母）
+3. 例如：
+```c
+// 类模板
+template<class TypeName,class Typeage>
+class Person
+{
+public:
+    Person(TypeName name,Typeage age){
+        this->name = name;
+        this->age = age;
+    }
+    TypeName name;
+    Typeage age;
+};
+int main(){
+
+    // 实例化类模板
+    Person<string,int> p1("zyx",25);
+    return 0;
+}
+```
+#### 8.3.2 类模板 与 函数模板 的 区别
+1. 类模板 **没有 自动类型推导**的 使用方式，只有 显示 类型
+2. 类模板 在 模板参数列表中，可以 **有 默认参数**
+如：
+```c
+	template<class TypeName,class Typeage = int> // 默认类型 为 int
+	自定义类
+```
+#### 8.3.3 类模板 中 成员函数 创建时机
+1. 普通函数：成员函数 一开始 就可以 创建
+2. ==类模板：成员函数 **在调用时 才创建**==
+
+#### 8.3.4 类模板（实例化）对象 做 函数参数
+1. 学习目标：类模板 实例化出的 对象，向 函数传参 的 方式。
+2. 三种 传入方式：
+1) **指定 传入的 类型**：		-- 包含 类模板参数列表。类模板中的对象，作为函数参数
+```c
+// 1. 指定 传入类型
+void printPerson1(Person<string,int> &p){  // 将 完整的类模板 作为 参数
+    p.display();
+}
+void test1() {
+    Person<string, int> p("hjs", 20); 
+    printPerson1(p);  // 调用函数，传入类模板实例
+}
+```
+2) **参数 模板化**			   -- 将 对象中的参数 变为 模板 进行传递
+```c
+// 2. 将 参数 模板化
+template<class T1,class T2>
+void printPerson2(Person<T1, T2> &p){
+    p.display();
+}
+void test2() {
+    Person<string, int> p("zyx", 25); 
+    printPerson2(p);  // 调用函数，传入类模板实例
+}
+```
+3) **整个类 模板化** 			 -- 将 这个对象类型 模板化 进行传递
+- 将 整个类 设置为 模板T
+```c
+// 3. 将 整个类 模板化
+template<class T>
+void printPerson3(T &p){
+    p.display();
+    cout << "T的数据类型为：" << typeid(T).name() << endl;
+}
+void test3() {
+    Person<string, int> p("xsb", 30); 
+    printPerson3(p);  // 调用函数，传入类模板实例
+}
+```
+3. 总结：==在 实际开发中，**方法一 最常用**==
 
 
 
@@ -2255,6 +2411,10 @@ int main{
 ### 推断 变量的类型：【auot 或 decltype】
 ```c
 	auto len = s.size();		// 系统自己定义 len的类型 （是 string::size_type类型） 
+```
+### 查看 数据类型：typeid
+```c
+	typeid(模板类型).name()
 ```
 
 # C++头文件的使用
